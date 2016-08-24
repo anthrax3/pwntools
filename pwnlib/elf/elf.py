@@ -312,10 +312,9 @@ class ELF(ELFFile):
             return
 
         try:
-            cmd = 'ulimit -s unlimited; LD_TRACE_LOADED_OBJECTS=1 LD_WARN=1 LD_BIND_NOW=1 %s 2>/dev/null'
-            arg = misc.sh_string(self.path)
+            cmd = misc.sh_command_with('ulimit -s unlimited; LD_TRACE_LOADED_OBJECTS=1 LD_WARN=1 LD_BIND_NOW=1 %s 2>/dev/null', self.path)
 
-            data = subprocess.check_output(cmd % (arg), shell = True, stderr = subprocess.STDOUT)
+            data = subprocess.check_output(cmd, shell = True, stderr = subprocess.STDOUT)
             libs = misc.parse_ldd_output(data)
 
             for lib in dict(libs):
@@ -736,7 +735,7 @@ class ELF(ELFFile):
 
         # Can't call self.executable_segments because of dependency loop.
         exec_seg = [s for s in self.segments if s.header.p_flags & P_FLAGS.PF_X]
-        return not any('GNU_STACK' in seg.header.p_type for seg in exec_seg)
+        return not any('GNU_STACK' in str(seg.header.p_type) for seg in exec_seg)
 
     @property
     def execstack(self):
